@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Data Table Fetcher</title>
+    <!-- Simple, self-contained CSS styles -->
+    <style>
+        :root {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Global & Container Styles */
+        body {
+            background-color: #f9fafb; /* Light background */
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            margin: 0 auto;
+            background-color: #fff;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            padding: 30px;
+        }
+        h1 {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 10px;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            border-top-color: #3498db;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Message Styles */
+        .status-item {
+            display: flex;
+            align-items: center;
+            font-weight: 500;
+            margin-bottom: 15px;
+        }
+        .status-loading { color: #3498db; }
+        .status-success { color: #27ae60; }
+        .status-error {
+            color: #c0392b;
+            background-color: #fcebeb;
+            padding: 10px;
+            border-radius: 4px;
+        }
+
+        /* Table Styles */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        thead {
+            background-color: #ecf0f1;
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            font-size: 12px;
+            color: #7f8c8d;
+            text-transform: uppercase;
+        }
+        /* Simple zebra striping and hover */
+        tbody tr:nth-child(even) {
+            background-color: #f4f6f7;
+        }
+        tbody tr:hover {
+            background-color: #e8f0f3;
+            transition: background-color 0.2s;
+        }
+
+        /* Boolean Spans (Yes/No) */
+        .status-yes, .status-no {
+            padding: 4px 8px;
+            font-size: 11px;
+            font-weight: bold;
+            border-radius: 12px;
+            display: inline-block;
+            line-height: 1;
+        }
+        .status-yes {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status-no {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+
+        <h1>devel:languages:perl metadata</h1>
+
+        <div id="message-container">
+            <p id="status-message" style="color: #6c757d; font-style: italic;">Fetching data...</p>
+        </div>
+
+        <div id="table-container">
+        </div>
+    </div>
+
+    <script>
+        const tableContainer = document.getElementById('table-container');
+        const messageContainer = document.getElementById('message-container');
+
+        const dataUrl = 'meta.json';
+
+        function showMessage(type, message) {
+            messageContainer.innerHTML = '';
+            let icon = '';
+            let statusClass = 'status-item';
+
+            if (type === 'loading') {
+                icon = `<div class="spinner"></div>`;
+                statusClass += ' status-loading';
+            } else if (type === 'success') {
+                icon = '✅ ';
+                statusClass += ' status-success';
+            } else if (type === 'error') {
+                icon = '❌ ';
+                statusClass += ' status-error';
+            }
+
+            messageContainer.innerHTML = `
+                <div class="${statusClass}">
+                    ${icon}
+                    <span>${message}</span>
+                </div>
+            `;
+        }
+
+        function buildTable(data) {
+            if (!data || Object.keys(data) === 0) {
+                tableContainer.innerHTML = '<p style="color: #6b7280;">No data records found to display.</p>';
+                return;
+            }
+
+            const headers = ["Module", "Version", "Overrides", "Patches"];
+
+            let tableHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            ${headers.map(header =>
+                                `<th scope="col">${header}</th>`
+                            ).join('')}
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            Object.entries(data).sort().forEach(([pkg, value]) => {
+
+                tableHTML += `<tr>`;
+                entry = {
+                  Module: pkg,
+                  Version: value["version"],
+                  Overrides: "cpanspec" in value ? "yes" : "-",
+                  Patches: value["cpanspec"] && value["cpanspec"]["patches"] ? Object.keys(value["cpanspec"]["patches"]).length : "-"
+                }
+
+                headers.forEach(key => {
+                    let cellContent = entry[key];
+                    let cellClasses = "";
+                    tableHTML += `<td class="${cellClasses}">${cellContent}</td>`;
+                });
+
+                tableHTML += `</tr>`;
+            });
+
+            tableHTML += `
+                    </tbody>
+                </table>
+            `;
+
+            tableContainer.innerHTML = tableHTML;
+        }
+
+        async function fetchWithRetry(url, maxRetries = 1) {
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    const response = await fetch(url);
+                    return response;
+                } catch (error) {
+                    console.error(`Attempt ${i + 1} failed:`, error.message);
+                    if (i === maxRetries - 1) {
+                        throw new Error('All fetch attempts failed.');
+                    }
+                    const delay = Math.pow(2, i) * 1000; // 1s, 2s, 4s delay
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
+            }
+        }
+
+        async function fetchDataAndBuildTable() {
+            tableContainer.innerHTML = '';
+            showMessage('loading', `Loading data from ${dataUrl}...`);
+
+            try {
+                const response = await fetchWithRetry(dataUrl);
+
+                if (!response.ok) {
+                    throw new Error(`Server responded with status: ${response.status}`);
+                }
+
+                const json = await response.json();
+                buildTable(json);
+                showMessage('success', `Successfully loaded records.`);
+            } catch (error) {
+                console.error("Critical Fetch Error:", error);
+                showMessage('error', `Failed to load data. ${error.message}`);
+                tableContainer.innerHTML = '';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', fetchDataAndBuildTable);
+    </script>
+</body>
+</html>
