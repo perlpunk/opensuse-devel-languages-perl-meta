@@ -1,0 +1,25 @@
+Initial commit
+
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+#
+# Author:    Some One <without@email.example>
+# Date:      Tue Dec 2 19:12:42 2025 +0100
+#
+# On branch main
+#
+# Initial commit
+#
+# Changes to be committed:
+#	new file:   README
+#
+# ------------------------ >8 ------------------------
+# Do not modify or remove the line above.
+# Everything below it will be ignored.
+diff --git a/README b/README
+new file mode 100644
+index 0000000..69a82ee
+--- /dev/null
++++ b/README
+@@ -0,0 +1 @@
++Just a tiny git repo for testing

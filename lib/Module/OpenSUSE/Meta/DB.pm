@@ -1,10 +1,9 @@
 use v5.42;
 use experimental 'class';
 
-use Module::OpenSUSE::Meta::Package;
-
 class Module::OpenSUSE::Meta::DB 0.001 {
     use autodie;
+    use Module::OpenSUSE::Meta::Package;
     use YAML::PP qw/ DumpFile /;
     use JSON::PP qw/ encode_json /;
 
@@ -18,7 +17,7 @@ class Module::OpenSUSE::Meta::DB 0.001 {
         my %packages;
         for my $dir (sort @dirs) {
             say "=== $dir";
-            my $pkg = Module::OpenSUSE::Meta::Package->new(meta => $self, name => $dir);
+            my $pkg = Module::OpenSUSE::Meta::Package->new(db => $self, name => $dir);
             my $data = $pkg->read_meta or next;
             $packages{ $dir } = $data;
         }

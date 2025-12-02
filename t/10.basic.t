@@ -12,12 +12,23 @@ my $obsdir = "$Bin/data";
 my $exportdir = "$temp/exportdir";
 mkdir $exportdir;
 
+my $mock_git = mock 'Module::OpenSUSE::Meta::Git' => (
+    track => true,
+    override => [
+        commit_and_date => sub {
+            return ('c0ffee', '2025-12-02');
+        },
+    ],
+);
 my $meta = Module::OpenSUSE::Meta::DB->new(obsdir => $obsdir, exportdir => $exportdir);
-my $pkg = Module::OpenSUSE::Meta::Package->new(meta => $meta, name => 'perl-Foo-Bar');
+my $pkg = Module::OpenSUSE::Meta::Package->new(db => $meta, name => 'perl-Foo-Bar');
 
 my $yaml = <<'EOM';
 ---
 perl-Foo-Bar:
+  last_commit:
+    sha: c0ffee
+    date: 2025-12-02
   build_requires:
   - perl
   - perl-macros
@@ -38,6 +49,8 @@ my $expected = Load $yaml;
 
 my $data = $pkg->read_meta;
 is $data, $expected->{'perl-Foo-Bar'}, 'Module::OpenSUSE::Meta::Package metadata';
+my $track = $mock_git->sub_tracking;
+like $track, { commit_and_date => [{}] }, 'Module::OpenSUSE::Meta::Git mock tracking';
 
 $meta->init;
 my $exported_yaml = LoadFile "$exportdir/meta.yaml";
