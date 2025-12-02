@@ -108,6 +108,9 @@
             background-color: #f8d7da;
             color: #721c24;
         }
+        a {
+            color: #550000;
+        }
     </style>
 </head>
 <body>
@@ -115,6 +118,19 @@
     <div class="container">
 
         <h1>devel:languages:perl metadata</h1>
+        <p>
+            For openSUSE we maintain the
+            <a href="https://build.opensuse.org/project/show/devel:languages:perl">devel:languages:perl</a>
+            repository with around 3k perl modules.
+            About half of them are in the official distributions like Tumbleweed
+            and Leap.
+            <br>
+            The sources are maintained in <a href="https://src.opensuse.org/perl">git</a>.
+            <br>
+            Here you can find all devel modules with their versions and additional
+            information, for example if we have local modifications (additional
+            dependencies, patches).
+        </p>
 
         <div id="message-container">
             <p id="status-message" style="color: #6c757d; font-style: italic;">Fetching data...</p>
@@ -165,6 +181,7 @@
                 ["Version", "Module version"],
                 ["Overrides", "cpanspec.yml has entries that modify the spec"],
                 ["Patches", "There are patches"],
+                ["Updated", "Date of last git commit"],
             ];
 
             let tableHTML = `
@@ -186,12 +203,16 @@
                   Module: pkg,
                   Version: value["version"],
                   Overrides: "cpanspec" in value ? "yes" : "-",
-                  Patches: value["cpanspec"] && value["cpanspec"]["patches"] ? Object.keys(value["cpanspec"]["patches"]).length : "-"
+                  Patches: value["cpanspec"] && value["cpanspec"]["patches"] ? Object.keys(value["cpanspec"]["patches"]).length : "-",
+                  Updated: value["last_commit"]["date"],
                 }
 
                 headers.forEach(key => {
                     let cellContent = entry[key[0]];
                     let cellClasses = "";
+                    if (key[0] === 'Module') {
+                        cellContent = `<a href="https://src.opensuse.org/perl/${cellContent}">${cellContent}</a>`;
+                    }
                     tableHTML += `<td class="${cellClasses}">${cellContent}</td>`;
                 });
 
