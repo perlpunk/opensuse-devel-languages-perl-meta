@@ -227,7 +227,7 @@
     <div id="popupOverlay" class="modal-overlay">
         <div class="info-card">
             <span class="close-btn" id="closePopup">&times;</span>
-            <h2 id="info-card-title">cpanspec.yml</h2>
+            <h3 id="info-card-title">cpanspec.yml</h3>
             <pre id="cpanspec-content"></pre>
         </div>
     </div>
@@ -278,6 +278,7 @@
             const headers = [
                 ["Module", "Module name"],
                 ["Version", "Module version"],
+                ["Dependencies", "BuildRequires / Requires / Recommends"],
                 ["Overrides", "cpanspec.yml has entries that modify the spec"],
                 ["Patches", "There are patches"],
                 ["Updated", "Date of last git commit"],
@@ -297,6 +298,24 @@
 
             Object.entries(data["packages"]).sort().forEach(([pkg, value]) => {
 
+                let buildReq = 0;
+                let req = 0;
+                let rec = 0;
+                let deps = '';
+                if ('build_requires' in value) {
+                    buildReq = value["build_requires"].length;
+                }
+                deps += buildReq;
+                if ('requires' in value) {
+                    req = value["requires"].length;
+                }
+                deps += ' / ' + req;
+                if ('recommends' in value) {
+                    console.log(pkg);
+                    rec = value["recommends"].length;
+                }
+                deps += ' / ' + rec;
+
                 tableHTML += `<tr>`;
                 entry = {
                   Module: pkg,
@@ -304,6 +323,7 @@
                   Overrides: "cpanspec" in value ? "yes" : "-",
                   Patches: value["cpanspec"] && value["cpanspec"]["patches"] ? Object.keys(value["cpanspec"]["patches"]).length : "-",
                   Updated: value["last_commit"]["date"],
+                  Dependencies: (buildReq + req) > 0 ? deps : '-',
                 }
 
                 headers.forEach(key => {
@@ -314,11 +334,12 @@
                     }
                     else if (key[0] === 'Overrides' && cellContent === 'yes') {
                         cellContent = `<button class="infoLink" onClick="showCpanspec('${pkg}')">${cellContent}</button>`;
-//                        cellContent = `<a href="javascript:showCpanspec('${pkg}')">${cellContent}</a>`;
                     }
                     else if (key[0] === 'Patches' && cellContent !== '-') {
                         cellContent = `<button class="infoLink" onClick="showPatches('${pkg}')">${cellContent}</button>`;
-//                        cellContent = `<a href="javascript:showPatches('${pkg}')">${cellContent}</a>`;
+                    }
+                    else if (key[0] === 'Dependencies' && cellContent !== '-') {
+                        cellContent = `<button class="infoLink" onClick="showDeps('${pkg}')">${cellContent}</button>`;
                     }
                     tableHTML += `<td class="${cellClasses}">${cellContent}</td>`;
                 });
@@ -360,7 +381,7 @@
                 table += line;
             });
             table += '</table>';
-            let title = "cpanspec YAML";
+            let title = "cpanspec YAML for " + pkg;
             showInfoCard(title, table);
         }
 
@@ -379,7 +400,38 @@
                 table += line;
             });
             table += '</table>';
-            showInfoCard("Patches", table);
+            showInfoCard("Patches for " + pkg, table);
+        }
+
+        function showDeps(pkg) {
+            pkgdata = metadata["packages"][pkg];
+            let table = '<table class="cpanspec">';
+            if ('build_requires' in pkgdata) {
+                let line = '<tr><td>BuildRequires</td><td>';
+                pkgdata["build_requires"].forEach((dep) => {
+                    line += dep + '<br>';
+                });
+                line += '</td></tr>';
+                table += line;
+            }
+            if ('requires' in pkgdata) {
+                let line = '<tr><td>Requires</td><td>';
+                pkgdata["requires"].forEach((dep) => {
+                    line += dep + '<br>';
+                });
+                line += '</td></tr>';
+                table += line;
+            }
+            if ('recommends' in pkgdata) {
+                let line = '<tr><td>Recommends</td><td>';
+                pkgdata["recommends"].forEach((dep) => {
+                    line += dep + '<br>';
+                });
+                line += '</td></tr>';
+                table += line;
+            }
+            table += '</table>';
+            showInfoCard("Dependencies for " + pkg, table);
         }
 
         function showInfoCard(title, content) {
