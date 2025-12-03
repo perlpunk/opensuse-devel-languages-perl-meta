@@ -21,9 +21,12 @@ class Module::OpenSUSE::Meta::DB 0.001 {
             my $data = $pkg->read_meta or next;
             $packages{ $dir } = $data;
         }
+        my %data = (packages => \%packages);
+        my ($sha, $date) = Module::OpenSUSE::Meta::Git->new(dir => $obsdir)->commit_and_date;
+        $data{last_commit} = { sha => $sha, date => $date };
 
-        my $json = encode_json \%packages;
-        DumpFile "$exportdir/meta.yaml", \%packages;
+        my $json = encode_json \%data;
+        DumpFile "$exportdir/meta.yaml", \%data;
         open my $fh, '>', "$exportdir/meta.json";
         print $fh $json;
         close $fh;

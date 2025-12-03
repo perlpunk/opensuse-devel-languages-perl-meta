@@ -25,30 +25,34 @@ my $pkg = Module::OpenSUSE::Meta::Package->new(db => $meta, name => 'perl-Foo-Ba
 
 my $yaml = <<'EOM';
 ---
-perl-Foo-Bar:
-  last_commit:
-    sha: c0ffee
-    date: 2025-12-02
-  build_requires:
-  - perl
-  - perl-macros
-  - perl(Module::Load)
-  - perl(Test::More)
-  - perl(Test::Warn)
-  patches:
-    - some-bugfix.patch
-  cpanspec:
-      patches:
-        some-bugfix.patch: -p1
-      preamble: 'BuildRequires: libyaml'
-  requires:
-  - perl(Module::Load)
-  version: 0.39.0
+last_commit:
+  date: 2025-12-02
+  sha: c0ffee
+packages:
+  perl-Foo-Bar:
+    last_commit:
+      sha: c0ffee
+      date: 2025-12-02
+    build_requires:
+    - perl
+    - perl-macros
+    - perl(Module::Load)
+    - perl(Test::More)
+    - perl(Test::Warn)
+    patches:
+      - some-bugfix.patch
+    cpanspec:
+        patches:
+          some-bugfix.patch: -p1
+        preamble: 'BuildRequires: libyaml'
+    requires:
+    - perl(Module::Load)
+    version: 0.39.0
 EOM
 my $expected = Load $yaml;
 
 my $data = $pkg->read_meta;
-is $data, $expected->{'perl-Foo-Bar'}, 'Module::OpenSUSE::Meta::Package metadata';
+is $data, $expected->{packages}->{'perl-Foo-Bar'}, 'Module::OpenSUSE::Meta::Package metadata';
 my $track = $mock_git->sub_tracking;
 like $track, { commit_and_date => [{}] }, 'Module::OpenSUSE::Meta::Git mock tracking';
 
