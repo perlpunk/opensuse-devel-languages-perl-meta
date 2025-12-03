@@ -41,7 +41,9 @@ class Module::OpenSUSE::Meta::Package 0.001 {
                 next;
             }
             if ($line =~ m/^BuildRequires: *(\S+)/) {
-                push @{ $meta{build_requires} }, $1;
+                my $req = $1;
+                next if $req =~ m/^perl(-macros)?$/;
+                push @{ $meta{build_requires} }, $req;
                 next;
             }
             if ($line =~ m/^Requires: *(\S+)/) {

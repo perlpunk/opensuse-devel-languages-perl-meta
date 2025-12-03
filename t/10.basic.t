@@ -34,8 +34,6 @@ packages:
       sha: c0ffee
       date: 2025-12-02
     build_requires:
-    - perl
-    - perl-macros
     - perl(Module::Load)
     - perl(Test::More)
     - perl(Test::Warn)
