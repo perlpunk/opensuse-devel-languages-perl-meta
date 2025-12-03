@@ -117,8 +117,13 @@
             background-color: #f8d7da;
             color: #721c24;
         }
-        a {
-            color: #550000;
+        table.main a {
+            color: #2266cc;
+            text-decoration: none;
+        }
+        table.main a:visited {
+            color: #8866cc;
+            text-decoration: none;
         }
 
         .info-card {
@@ -167,6 +172,21 @@
 
         .close-btn:hover {
             color: #ef4444;
+        }
+
+        button.infoLink {
+            background-color: #88bbff;
+            padding: 2px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s, transform 0.1s;
+        }
+
+        button.infoLink:hover {
+            background-color: #1d4ed8;
+            color: white;
         }
     </style>
 </head>
@@ -293,10 +313,12 @@
                         cellContent = `<a href="https://src.opensuse.org/perl/${cellContent}">${cellContent}</a>`;
                     }
                     else if (key[0] === 'Overrides' && cellContent === 'yes') {
-                        cellContent = `<a href="javascript:showCpanspec('${pkg}')">${cellContent}</a>`;
+                        cellContent = `<button class="infoLink" onClick="showCpanspec('${pkg}')">${cellContent}</button>`;
+//                        cellContent = `<a href="javascript:showCpanspec('${pkg}')">${cellContent}</a>`;
                     }
                     else if (key[0] === 'Patches' && cellContent !== '-') {
-                        cellContent = `<a href="javascript:showPatches('${pkg}')">${cellContent}</a>`;
+                        cellContent = `<button class="infoLink" onClick="showPatches('${pkg}')">${cellContent}</button>`;
+//                        cellContent = `<a href="javascript:showPatches('${pkg}')">${cellContent}</a>`;
                     }
                     tableHTML += `<td class="${cellClasses}">${cellContent}</td>`;
                 });
